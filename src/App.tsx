@@ -15,7 +15,7 @@ const App = () => {
 
   return (
     <div className={styles.listWrapper}>
-      <VirtualList itemsCount={10000} itemHeight={50} listHeight={800}>
+      <VirtualList itemsCount={10000} itemHeight={itemHeight} listHeight={800}>
         {renderItem}
       </VirtualList>
     </div>

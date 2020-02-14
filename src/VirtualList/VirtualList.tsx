@@ -2,6 +2,34 @@ import React, { useRef, useState } from 'react';
 import styles from './VirtualList.module.scss';
 import makeRange from './makeRange';
 
+// TODO: tests, new file
+const calcItemsRange = (
+  itemHeight: number,
+  scrollTop: number,
+  listHeight: number,
+  itemsCount: number,
+  preRenderCount: number,
+): [number, number] => {
+  const visibleCount = listHeight / itemHeight;
+
+  const firstVisibleItemIndex = Math.floor(scrollTop / itemHeight);
+
+  const firstItemIndex = Math.max(
+    0,
+    firstVisibleItemIndex - preRenderCount,
+  );
+
+  const lastVisibleItemIndex = firstVisibleItemIndex + visibleCount;
+
+  const lastItemIndex = Math.min(
+    itemsCount,
+    lastVisibleItemIndex + preRenderCount,
+  );
+
+  return [firstItemIndex, lastItemIndex];
+};
+
+
 interface IProps {
   preRenderCount?: number; // TODO: name
   itemsCount: number;
@@ -9,15 +37,6 @@ interface IProps {
   listHeight: number; // TODO: auto
   children: (index: number) => JSX.Element;
 }
-
-// const calcStartItemIndex = (
-//   scrollTop: number,
-//   listHeight: number,
-//   itemsCount: number,
-//   prePrenderCount: number,
-// ) => {
-//   console.log();
-// };
 
 const VirtualList: React.FC<IProps> = (props) => {
   const { itemsCount, itemHeight, preRenderCount = 10 } = props;
@@ -28,31 +47,21 @@ const VirtualList: React.FC<IProps> = (props) => {
   const scroller = useRef<HTMLDivElement>(null);
 
   const onScroll = (e: any) => {
+    // TODO: throttle
     setScrollTop(e.target.scrollTop);
   };
 
-  const length = props.listHeight / itemHeight;
-
-  const firstVisibleItemIndex = Math.floor(scrollTop / itemHeight);
-  const lastVisibleItemIndex = firstVisibleItemIndex + length;
-
-  const firstItemIndex = Math.max(
-    0,
-    firstVisibleItemIndex - preRenderCount,
-  );
-
-  const lastItemIndex = Math.min(
+  const [firstItemIndex, lastItemIndex] = calcItemsRange(
+    itemHeight,
+    scrollTop,
+    props.listHeight,
     itemsCount,
-    lastVisibleItemIndex + preRenderCount,
+    preRenderCount,
   );
-
-  console.log(scrollTop, firstItemIndex, lastItemIndex);
 
   const itemsArray = makeRange(firstItemIndex, lastItemIndex);
 
-  // console.log(itemsArray);
-
-  const itemsOffset = firstVisibleItemIndex
+  const itemsOffset = firstItemIndex * itemHeight;
 
   return (
     <div
@@ -65,7 +74,7 @@ const VirtualList: React.FC<IProps> = (props) => {
         className={styles.wrapper}
         style={{ height: itemsCount * itemHeight }}
       >
-        <div className={styles.items} style={{ transform: `translateY(${-scrollTop}px)` }}>
+        <div style={{ transform: `translateY(${itemsOffset}px)` }}>
           {itemsArray.map((idx) => renderItem(idx))}
         </div>
       </div>
